@@ -2,12 +2,14 @@ from snake_game import SnakeGame
 from rl_agent import RLAgent
 import numpy as np
 import time
+import torch
 
 def train():
     game = SnakeGame()
-    agent = RLAgent()  # Now uses state_size=14 by default
-    batch_size = 1000
-    episodes = 1000
+    agent = RLAgent()
+    
+    episodes = 2000  # More episodes for complex game
+    best_score = -float('inf')
     
     for e in range(episodes):
         state = game.reset()
@@ -26,15 +28,17 @@ def train():
             state = next_state
             total_reward += reward
             
+            # Train more frequently with smaller batches
+            if len(agent.memory) > agent.batch_size:
+                loss = agent.replay(agent.batch_size)
+            
             if done:
-                print(f"Episode: {e}, Score: {score}, Epsilon: {agent.epsilon:.2f}, Reward: {total_reward}")
+                if score > best_score:
+                    best_score = score
+                    torch.save(agent.model.state_dict(), 'snake_rl.pth')
+                
+                print(f"Episode: {e}, Score: {score}, Best: {best_score}, Epsilon: {agent.epsilon:.2f}, Reward: {total_reward}")
                 break
-            
-            # Train
-            loss = agent.replay(batch_size)
-            
-    # Save model
-    torch.save(agent.model.state_dict(), 'snake_rl.pth')
 
 if __name__ == "__main__":
     train()

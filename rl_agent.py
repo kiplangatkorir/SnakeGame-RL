@@ -37,15 +37,16 @@ class RLAgent:
     def __init__(self, state_size=14, action_size=3):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = ReplayMemory(10000)
-        self.gamma = 0.95    # discount rate
-        self.epsilon = 1.0   # exploration rate
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
-        self.learning_rate = 0.001
-        self.model = DQN(state_size, 128, action_size)
+        self.memory = ReplayMemory(50000)  # Increased memory size
+        self.gamma = 0.9     # Slightly lower discount rate
+        self.epsilon = 1.0   # Exploration rate
+        self.epsilon_min = 0.05  # Higher minimum exploration
+        self.epsilon_decay = 0.999  # Slower decay
+        self.learning_rate = 0.0005  # Smaller learning rate
+        self.model = DQN(state_size, 256, action_size)  # Larger network
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.criterion = nn.MSELoss()
+        self.batch_size = 512  # Smaller batch size
     
     def remember(self, state, action, reward, next_state, done):
         self.memory.push(state, action, reward, next_state, done)
