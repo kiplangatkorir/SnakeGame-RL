@@ -10,9 +10,8 @@ class SnakeGame:
         self.display = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption('Snake RL')
         self.clock = pygame.time.Clock()
-        self.reset()
         
-        # Generate obstacles
+        # Initialize obstacles first
         self.obstacles = []
         for _ in range(5):
             x = random.randint(0, (self.width-20)//20) * 20
@@ -22,7 +21,10 @@ class SnakeGame:
         # Food types (normal, bonus, poison)
         self.food_types = ['normal', 'bonus', 'poison']
         self.food_colors = [(255, 0, 0), (255, 215, 0), (138, 43, 226)]
-
+        
+        # Now call reset
+        self.reset()
+        
     def reset(self):
         self.snake = [(self.width//2, self.height//2)]
         self.direction = (1, 0)
