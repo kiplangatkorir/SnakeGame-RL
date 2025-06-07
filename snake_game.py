@@ -26,14 +26,48 @@ class SnakeGame:
         return (x, y)
 
     def _get_state(self):
-        # State representation for RL agent
+        # Convert state to numerical array for RL
         head = self.snake[0]
-        return {
-            'snake': self.snake,
-            'food': self.food,
-            'direction': self.direction,
-            'score': self.score
-        }
+        food = self.food
+        
+        # Relative food position
+        food_left = food[0] < head[0]
+        food_right = food[0] > head[0]
+        food_up = food[1] < head[1]
+        food_down = food[1] > head[1]
+        
+        # Danger directions
+        danger_straight = False
+        danger_right = False
+        danger_left = False
+        
+        # Current direction
+        dir_left = self.direction[0] == -1
+        dir_right = self.direction[0] == 1
+        dir_up = self.direction[1] == -1
+        dir_down = self.direction[1] == 1
+        
+        # Create state array
+        state = [
+            # Danger directions
+            danger_straight,
+            danger_right,
+            danger_left,
+            
+            # Current movement direction
+            dir_left,
+            dir_right,
+            dir_up,
+            dir_down,
+            
+            # Food location
+            food_left,
+            food_right,
+            food_up,
+            food_down
+        ]
+        
+        return np.array(state, dtype=np.float32)
 
     def play_step(self, action):
         self.frame_iteration += 1

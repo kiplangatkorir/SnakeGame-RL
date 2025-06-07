@@ -5,7 +5,7 @@ import time
 
 def train():
     game = SnakeGame()
-    agent = RLAgent(state_size=11, action_size=3)
+    agent = RLAgent()  # Uses default state_size=11 now
     batch_size = 1000
     episodes = 1000
     

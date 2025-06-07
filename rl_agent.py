@@ -34,7 +34,7 @@ class ReplayMemory:
         return len(self.memory)
 
 class RLAgent:
-    def __init__(self, state_size, action_size):
+    def __init__(self, state_size=11, action_size=3):
         self.state_size = state_size
         self.action_size = action_size
         self.memory = ReplayMemory(10000)
@@ -59,7 +59,7 @@ class RLAgent:
     
     def replay(self, batch_size):
         if len(self.memory) < batch_size:
-            return
+            return 0.0
         minibatch = self.memory.sample(batch_size)
         
         states = torch.FloatTensor(np.array([t[0] for t in minibatch]))
