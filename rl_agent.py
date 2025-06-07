@@ -34,7 +34,7 @@ class ReplayMemory:
         return len(self.memory)
 
 class RLAgent:
-    def __init__(self, state_size=11, action_size=3):
+    def __init__(self, state_size=14, action_size=3):
         self.state_size = state_size
         self.action_size = action_size
         self.memory = ReplayMemory(10000)
