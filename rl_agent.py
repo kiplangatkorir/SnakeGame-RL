@@ -37,16 +37,22 @@ class RLAgent:
     def __init__(self, state_size=14, action_size=3):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = ReplayMemory(50000)  # Increased memory size
-        self.gamma = 0.9     # Slightly lower discount rate
+        self.memory = ReplayMemory(100000)  # Larger memory
+        self.gamma = 0.9     # Discount rate
         self.epsilon = 1.0   # Exploration rate
-        self.epsilon_min = 0.05  # Higher minimum exploration
-        self.epsilon_decay = 0.999  # Slower decay
-        self.learning_rate = 0.0005  # Smaller learning rate
-        self.model = DQN(state_size, 256, action_size)  # Larger network
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.criterion = nn.MSELoss()
-        self.batch_size = 512  # Smaller batch size
+        self.epsilon_min = 0.05
+        self.epsilon_decay = 0.9995  # Slower decay
+        self.learning_rate = 0.00025  # Smaller learning rate
+        self.model = DQN(state_size, 256, action_size)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate, weight_decay=1e-5)  # Added L2 regularization
+        self.criterion = nn.SmoothL1Loss()  # Huber loss for more stable training
+        self.batch_size = 1024  # Larger batch size
+        self.target_update = 1000  # Steps between target network updates
+        self.steps = 0
+        
+        # Target network
+        self.target_model = DQN(state_size, 256, action_size)
+        self.target_model.load_state_dict(self.model.state_dict())
     
     def remember(self, state, action, reward, next_state, done):
         self.memory.push(state, action, reward, next_state, done)
@@ -61,6 +67,7 @@ class RLAgent:
     def replay(self, batch_size):
         if len(self.memory) < batch_size:
             return 0.0
+            
         minibatch = self.memory.sample(batch_size)
         
         states = torch.FloatTensor(np.array([t[0] for t in minibatch]))
@@ -69,16 +76,29 @@ class RLAgent:
         next_states = torch.FloatTensor(np.array([t[3] for t in minibatch]))
         dones = torch.FloatTensor(np.array([t[4] for t in minibatch]))
         
+        # Current Q values
         current_q = self.model(states).gather(1, actions.unsqueeze(1))
-        next_q = self.model(next_states).max(1)[0].detach()
-        target = rewards + (1 - dones) * self.gamma * next_q
         
+        # Target Q values
+        with torch.no_grad():
+            next_q = self.target_model(next_states).max(1)[0]
+            target = rewards + (1 - dones) * self.gamma * next_q
+        
+        # Compute loss
         loss = self.criterion(current_q.squeeze(), target)
         
+        # Optimize
         self.optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)  # Gradient clipping
         self.optimizer.step()
         
+        # Update target network
+        self.steps += 1
+        if self.steps % self.target_update == 0:
+            self.target_model.load_state_dict(self.model.state_dict())
+        
+        # Decay epsilon
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
         

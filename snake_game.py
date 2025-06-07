@@ -120,7 +120,7 @@ class SnakeGame:
         self._move(action)
         
         # 3. Check if game over
-        reward = 0
+        reward = -0.1  # Small penalty for each step to encourage efficiency
         game_over = False
         if self._is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
@@ -136,8 +136,8 @@ class SnakeGame:
                 self.score += 3
                 reward = 20
             else:  # poison
-                self.score -= 2
-                reward = -20
+                self.score = max(0, self.score - 2)  # Prevent negative scores
+                reward = -15  # Less severe penalty
                 if len(self.snake) > 3:
                     self.snake.pop()
                     self.snake.pop()
